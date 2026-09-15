@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mahalle 3D - By Emir</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: #000; font-family: sans-serif; overflow: hidden; color: #fff; }
+        
+        /* Arayüz Katmanları */
+        .screen { position: absolute; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; background: rgba(0,0,0,0.9); }
+        .hidden { display: none !important; }
+        
+        /* Logo & Menü */
+        h1.logo { font-size: 3rem; text-shadow: 0 0 15px #f00; margin-bottom: 20px; letter-spacing: 2px; }
+        .btn { background: #e63946; color: #fff; border: none; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(230,57,70,0.4); margin: 10px; }
+        .btn:active { transform: scale(0.95); }
+        
+        /* Karakter Seçim Grid */
+        .char-grid { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 90%; }
+        .char-card { background: #222; border: 2px solid #444; padding: 15px; border-radius: 10px; text-align: center; width: 110px; }
+        .char-card.active { border-color: #e63946; background: #333; }
+        
+        /* Telefon Bildirimi */
+        #phone-notif { position: absolute; top: 20px; right: -300px; width: 250px; background: rgba(20,20,20,0.95); border-left: 5px solid #25D366; border-radius: 8px; padding: 12px; transition: 0.5s; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        #phone-notif.show { right: 20px; }
+        
+        /* Diyalog Kutusu */
+        #dialog-box { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: rgba(0,0,0,0.85); border: 1px solid #555; border-radius: 8px; padding: 15px; z-index: 100; font-size: 1rem; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- 1. AÇILIŞ (INTRO) -->
+    <div id="intro-screen" class="screen">
+        <h1 class="logo">BY EMİR</h1>
+        <p style="color:#aaa;">Sunar...</p>
+    </div>
+
+    <!-- 2. ANA MENÜ -->
+    <div id="main-menu" class="screen hidden">
+        <h1 class="logo">MAHALLE 3D</h1>
+        <button class="btn" onclick="openCharSelect()">MAHALLEYE İN</button>
+    </div>
+
+    <!-- 3. KARAKTER SEÇİMİ -->
+    <div id="char-screen" class="screen hidden">
+        <h2 style="margin-bottom:20px;">Karakterini Seç</h2>
+        <div class="char-grid">
+            <div class="char-card" onclick="selectChar('Emir')"><h3>Emir</h3></div>
+            <div class="char-card" onclick="selectChar('Ayaz')"><h3>Ayaz</h3></div>
+            <div class="char-card" onclick="selectChar('Umut')"><h3>Umut</h3></div>
+            <div class="char-card" onclick="selectChar('Emirhan')"><h3>Emirhan</h3></div>
+            <div class="char-card" onclick="selectChar('Tuna')"><h3>Tuna</h3></div>
+        </div>
+        <button class="btn" style="margin-top:20px;" onclick="startGame()">OYUNA BAŞLA</button>
+    </div>
+
+    <!-- 4. YÜKLENİYOR (LOADING) -->
+    <div id="loading-screen" class="screen hidden">
+        <h2>Yükleniyor...</h2>
+        <p style="color:#aaa; margin-top:10px;">Mahalle hazırlanıyor.</p>
+    </div>
+
+    <!-- OYUN İÇİ ARAYÜZ -->
+    <div id="phone-notif">
+        <strong style="color:#25D366;">Mesaj: Kanka</strong>
+        <p id="msg-text" style="font-size:0.9rem; margin-top:5px;">Aşşa gel la</p>
+    </div>
+
+    <div id="dialog-box" class="hidden">
+        <b id="speaker-name" style="color:#e63946;">Karakter:</b>
+        <p id="dialog-text" style="margin-top:5px;"></p>
+    </div>
+
+<script>
+    let selectedCharacter = "Emir";
+
+    // Akış Kontrolü
+    setTimeout(() => {
+        document.getElementById('intro-screen').classList.add('hidden');
+        document.getElementById('main-menu').classList.remove('hidden');
+    }, 2500);
+
+    function openCharSelect() {
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('char-screen').classList.remove('hidden');
+    }
+
+    function selectChar(name) {
+        selectedCharacter = name;
+        document.querySelectorAll('.char-card').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function startGame() {
+        document.getElementById('char-screen').classList.add('hidden');
+        document.getElementById('loading-screen').classList.remove('hidden');
+        
+        setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            init3DWorld();
+            triggerPhoneMessage("Aşşa gel la");
+        }, 2000);
+    }
+
+    function triggerPhoneMessage(text) {
+        const notif = document.getElementById('phone-notif');
+        document.getElementById('msg-text').innerText = text;
+        notif.classList.add('show');
+        setTimeout(() => notif.classList.remove('show'), 4000);
+    }
+
+    function showDialog(speaker, text) {
+        const box = document.getElementById('dialog-box');
+        document.getElementById('speaker-name').innerText = speaker + ":";
+        document.getElementById('dialog-text').innerText = text;
+        box.classList.remove('hidden');
+    }
+
+    // 3D Dünya ve Motor Fizikleri
+    function init3DWorld() {
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: false }); // Telefonda yüksek FPS için antialias kapalı
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // HD Çözünürlük Dengesi
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Işıklandırma (HD hissi için)
+        const light = new THREE.DirectionalLight(0xffffff, 1.2);
+        light.position.set(10, 20, 15);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x666666));
+
+        // Zemin / Yol
+        const roadGeo = new THREE.PlaneGeometry(100, 100);
+        const roadMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+        const road = new THREE.Mesh(roadGeo, roadMat);
+        road.rotation.x = -Math.PI / 2;
+        scene.add(road);
+
+        camera.position.set(0, 5, 10);
+        camera.lookAt(0, 0, 0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+</script>
+</body>
+</html>
